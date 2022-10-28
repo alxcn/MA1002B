@@ -1,0 +1,274 @@
+---
+title: "S01:MetodosNumericos"
+author: "Alejandro Ucan Puc"
+date: "2022-10-26"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Método de Euler
+
+La siguiente rutina sirve para aplicar el método de Euler para aproximar la solución de un sistema de EDOs.
+
+Recordemos que nosotros que nuestro problema de la vida real se modela con un sistema de ecuaciones de la forma: $$\begin{array}{ccc} x'(t) & = & f_1(t,x(t),y(t)) \\ y'(t) & = & f_2(t,x(t),y(t)) \end{array} $$ con valores iniciales $x(0)=x_0$ y $y(0)=y_0.$
+
+*Nota:* Cabe mencionar que podemos tener más de dos ecuaciones con más funciones incógnita.
+
+## La idea del método:
+
+Recordemos que el método de Euler se basa en la aproximación de una función mediante el *polinomio de Taylor* de orden 1, es decir, $$f(t+h)=f(t)+hf'(t) + E(t,h)$$ donde $E(t,h)$ es un error. Debido a que sabemos que nuestra función deseada satisface la ecuación diferencial $$ x'(t) =  f_1(t,x(t),y(t))$$ podemos sustituir esto en la fórmula del polinomio de Taylor y obtener una aproximación a través de la función multivaluada $f_1(t,x,y).$
+
+Así, lo anterior, implica que si queremos conocer el valor de la solución cerca de nuestras condiciones iniciales, podemos utilizar la expresión: $$x(t+h)=x(t)+hf_1(t,x(t),y(t)).$$ $$y(t+h)=y(t)+hf_2(t,x(t),y(t)).$$
+
+Si tenemos nuestra ventana de tiempo es $[t_0,t_n],$ y queremos hacer $n$ observaciones, entonces nuestro paso será de $h=\frac{t_n-t_0}{n},$ y cada nuestras soluciones en cada tiempo observado serán: $$x(t_{i+1})=x(t_{i})+h*f_1(t_i,x(t_i),y(t_i)).$$ $$y(t_{i+1})=y(t_i)+hf_2(t_i,x(t_i),y(t_i)).$$
+
+Veamos como realizar esto en R. Primero los haremos con una sola ecuación y luego lo modificaremos para un sistema.
+
+```{r}
+# Definiremos una rutina llamada Euler, cuyos parametros serán:
+# dy.dx=function(x,y){f(t,x,y)}: es la función correspondiente a la derivada, dada por la ecuación diferencial.
+# h: es el tamaño de mi paso.
+# y0: es mi condición incial.
+# start: es el inicio de mi ventana de tiempo/observación.
+# end: es el final de mi ventana de tiempo/observación.
+euler <- function(dy.dx, h=1E-7, y0=1, start=0, end=1) {
+nsteps <- (end-start)/h
+ys <- numeric(nsteps+1)
+ys[1] <- y0
+for (i in 1:nsteps) {
+x <- start + (i-1)*h
+ys[i+1] <- ys[i] + h*dy.dx(x,ys[i])
+}
+ys
+}
+```
+
+```{r}
+dy.dx <- function(x,y){3*x-y+8}
+euler(dy.dx, start=0, end=0.5, h=0.1, y0=3)
+```
+La modificación para un sistema no es gran diferencia, tan solo necesitamos agregar más parametros en mi función.
+
+```{r}
+library(tidyverse)
+library(latex2exp)
+library(gridExtra)
+# Agregamos las entradas al número de funciones adecuadas (en este ejemplo estoy poniendo tres, pero podemos modificarlo a tantas funciones como ecuaciones tengamos).
+seuler <-function(dy.dt, dx.dt, h=1E-7, y0=1,x0=1, start=0, end=1){
+nsteps <- (end-start)/h
+n <- numeric(nsteps+1)
+ys <- numeric(nsteps+1)
+xs <- numeric(nsteps+1)
+ts <- numeric(nsteps+1)
+ys[1] <- y0
+xs[1] <- x0
+ts[1] <- start
+n[1] <- 1
+for (i in 1:nsteps) {
+t <- start + i*h
+ts[i+1] <- t
+n[i+1] <- i+1
+ys[i+1] <- ys[i] + h*dy.dt(t,xs[i],ys[i])
+xs[i+1] <- xs[i] + h*dx.dt(t,xs[i],ys[i])
+}
+
+df <- data.frame(index=n,Tn=ts, Xn=xs, Yn=ys)
+return(df)
+}
+```
+Hagamos un ejemplo con el sistema $$\begin{array}{ccc} x'&=&0.6x-0.01*x*y\\ 
+y'&=&-0.1y+0.02*x*y
+\end{array}$$
+
+```{r}
+dx.dt <- function(t,x,y){0*t+0.04*x-0.01*x*y}
+dy.dt <- function(t,x,y){0*t-0.1*y+0.02*x*y}
+data<-seuler(dx.dt,dy.dt, start=0, end=1, h=0.1, y0=3,x0=10)
+data
+```
+
+## Paquete _deSolve_
+
+R tiene su propio paquete para resolver EDOs y SEDOs llamado _deSolve_ a continuación veremos como funciona.
+
+```{r}
+# PACKAGES:
+library(deSolve)
+library(reshape2)
+library(ggplot2)
+
+
+initial_state_values <- c(X = 10,  # Número de especie 1
+                          Y = 3)   # Número de especie 2       # 
+
+
+#razones en unidades de días^-1
+parameters <- c(a = 0.04,    
+                b = -0.01,
+                c=-0.1,
+                d= 0.02)
+
+#valores de tiempo para resolver la ecuación, de 0 a 60 días
+times <- seq(from = 0, to = 200, by = 1)   
+
+prey_model <- function(time, state, parameters) {  
+    with(as.list(c(state, parameters)), {# R obtendrá los nombres de variables a
+                                         # partir de inputs de estados y parametros
+        dX <- a*X+b*X*Y              
+        dY <- c*Y+d*X*Y   
+        return(list(c(dX, dY))) 
+    })
+}
+
+# poner la solución del sistema de ecuaciones en forma de un dataframe
+output <- as.data.frame(ode(y = initial_state_values, 
+                            times = times, 
+                            func = prey_model,
+                            parms = parameters,method="euler"))
+```
+
+
+###  Gráficos de la evolución del sistema
+
+```{r }
+
+output_long <- melt(as.data.frame(output), id = "time")                  
+
+ggplot(data = output_long,                                              
+       aes(x = time, y = value, colour = variable, group = variable)) +  
+  geom_line() +                                                          
+  xlab("Tiempo (días)")+                                                   
+  ylab("Número en la población") +                                             
+  labs(colour = "Subconjunto") +
+  theme(legend.position = "bottom")
+
+```
+
+
+# Euler Modificado:
+
+El método de Euler modificado es una adaptación del método de Euler clásico con una ligera modificación que ayuda a minimizar el error, para esto toma un promedio entre la derivada anterior y la actual en cada paso. Esto se traduce a la ecuación:
+
+$$x(t_{i+1})=x(t_{i})+h*\frac{f_1(t_i,x(t_i),y(t_i))+f_1(t_{i+1},\tilde{x}_{i+1},\tilde{y}_{i+1})}{2}.$$
+
+Donde $\tilde{x}_j$ y $\tilde{y}_j$ son aproximados con el método de Euler usual.
+```{r}
+# Agregamos las entradas al número de funciones adecuadas (en este ejemplo estoy poniendo tres, pero podemos modificarlo a tantas funciones como ecuaciones tengamos).
+Modseuler <-function(dy.dt, dx.dt, h=1E-7, y0=1,x0=1, start=0, end=1){
+nsteps <- (end-start)/h
+n <- numeric(nsteps+1)
+ys <- numeric(nsteps+1)
+xs <- numeric(nsteps+1)
+ts <- numeric(nsteps+1)
+ys[1] <- y0
+xs[1] <- x0
+ts[1] <- start
+n[1] <- 1
+for (i in 1:nsteps) {
+t <- start + i*h
+ts[i+1] <- t
+n[i+1] <- i+1
+auxy <- ys[i] + h*dy.dt(t,xs[i],ys[i])
+auxx <- xs[i] + h*dx.dt(t,xs[i],ys[i])
+ys[i+1] <- ys[i] + h*(dy.dt(t,xs[i],ys[i])+dy.dt(t,auxx,auxy))/2
+xs[i+1] <- xs[i] + h*(dx.dt(t,xs[i],ys[i])+dx.dt(t,auxx,auxy))/2
+}
+
+df <- data.frame(index=n,Tn=ts, Xn=xs, Yn=ys)
+return(df)
+}
+```
+
+
+```{r}
+dx.dt <- function(t,x,y){0*t+0.04*x-0.01*x*y}
+dy.dt <- function(t,x,y){0*t-0.1*y+0.02*x*y}
+data<-Modseuler(dx.dt,dy.dt, start=0, end=1, h=0.1, y0=3,x0=10)
+data
+```
+
+Desafortunadamente este método no está contemplado dentro de los métodos de solución para ODEs en _deSolve_ por lo que no podemos ejemplificarlos allí.
+
+# Método de Runge-Kutta (de orden 4)
+
+El método de Runge-Kutta también se basa en la aproximación mediante el polinomio de Taylor para funciones hasta el orden dos: $$x(t+h)=x(t)+hx'(t)+\frac{h^2}{2}x''(t)+R_3(t,h),$$
+
+dado que $x'(t)=f(t,x)$ entonces $x''(t)=f'(t,x(t))$, solo que en este caso vamos a aproximar la función que $f_i(t,x,y),$ notemos que dado que $f_i$ es una función en varias variables necesitamos describir el polinomio de Taylor para una función de varias variables: $$f(t+h_1,x+h_2)=f(t,x)+\left[h_1 \frac{\partial f}{\partial t}(t,x)+h_2\frac{\partial f}{\partial x}(t,x)\right]+R_2(t,x).$$
+
+En nuestro caso, nuestra función no es exactamente de dos variables dado que $x$ es una función de $t,$ por lo que la expresión anterior se reescribe como
+
+$$f'(t,x)=\frac{\partial f}{\partial t}(t,x)+\frac{\partial f}{\partial x}(t,x)x'(t)=\frac{\partial f}{\partial t}(t,x)+\frac{\partial f}{\partial x}(t,x)f(t,x)$$
+
+## Orden 4
+
+Haciendo el álgebra para encontrar los parámetros, para aproximar hasta el polinomio de Taylor de orden 4 quedan como:
+
+$$\begin{array}{ccc}
+w_i & = & w_{i-1} \\
+k_1 & = & hf(t_{i-1},w_{i-1}) \\
+k_2 & = & hf\left(t_{i-1} +\frac{h}{2},w_{i-1}+\frac{k_1}{2}\right) \\
+k_3 & = & hf\left(t_{i-1} +\frac{h}{2},w_{i-1}+\frac{k_2}{2}\right) \\
+k_4 & = & hf(t_i,w_{i-1}+k_3)\\
+w_i & = & w_{i-1}+\frac{1}{6}(k_1+2k_2+2k_3+k_4).
+\end{array}
+$$
+
+Afortunadamente, el método de Runge-Kutta es uno de los métodos implementados en _deSolve_ por lo que aprovecharemos esto para realizar la implementación.
+
+```{r}
+# PACKAGES:
+library(deSolve)
+library(reshape2)
+library(ggplot2)
+
+
+initial_state_values <- c(X = 10,  # Número de especie 1
+                          Y = 3)   # Número de especie 2       # 
+
+
+#razones en unidades de días^-1
+parameters <- c(a = 0.04,    
+                b = -0.01,
+                c=-0.1,
+                d= 0.02)
+
+#valores de tiempo para resolver la ecuación, de 0 a 60 días
+times <- seq(from = 0, to = 200, by = 1)   
+
+prey_model <- function(time, state, parameters) {  
+    with(as.list(c(state, parameters)), {# R obtendrá los nombres de variables a
+                                         # partir de inputs de estados y parametros
+        dX <- a*X+b*X*Y              
+        dY <- c*Y+d*X*Y   
+        return(list(c(dX, dY))) 
+    })
+}
+
+# poner la solución del sistema de ecuaciones en forma de un dataframe
+output <- as.data.frame(ode(y = initial_state_values, 
+                            times = times, 
+                            func = prey_model,
+                            parms = parameters,method="rk4"))
+```
+
+
+###  Gráficos de la evolución del sistema
+
+```{r }
+
+output_long <- melt(as.data.frame(output), id = "time")                  
+
+ggplot(data = output_long,                                              
+       aes(x = time, y = value, colour = variable, group = variable)) +  
+  geom_line() +                                                          
+  xlab("Tiempo (días)")+                                                   
+  ylab("Número en la población") +                                             
+  labs(colour = "Subconjunto") +
+  theme(legend.position = "bottom")
+
+```
