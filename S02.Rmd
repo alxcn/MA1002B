@@ -73,6 +73,29 @@ return(error)
 
 ```{r}
 M <- 0.5*exp(2)-2
-Cerror(h=0.2,L=1,M=M,start=0,end=2)
+Error2<-Cerror(h=0.2,L=1,M=M,start=0,end=2)
+Error2
+```
+```{r}
+library(deSolve)
+library(reshape2)
+library(ggplot2)
+
+times <- seq(0, 2, by=0.2)
+
+output <- data.frame(times,Error,Error2)
+output
+df <- melt(output ,  id.vars = 'times', variable.name = 'Errors')
+#create line plot for each column in data frame
+ggplot(df, aes(times, value)) +
+  geom_line(aes(colour = Errors)) #+ facet_grid(Errors ~ .)
+
 ```
 
+# Actividad de Clase 
+
+Basados el rmd anterior. Realiza lo que se te pide a continuación (sólamente con tus simulaciones con el método de Euler):
+
+1. calcula el error real y la cota de error, y realiza una gráfica comparando ambos errores. 
+
+2. calcula el tamaño de paso $h$ que optimiza el error y realiza una comparación en  estos casos. 
