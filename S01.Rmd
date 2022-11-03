@@ -175,8 +175,8 @@ ts[i+1] <- t
 n[i+1] <- i+1
 auxy <- ys[i] + h*dy.dt(t,xs[i],ys[i])
 auxx <- xs[i] + h*dx.dt(t,xs[i],ys[i])
-ys[i+1] <- ys[i] + h*(dy.dt(t,xs[i],ys[i])+dy.dt(t,auxx,auxy))/2
-xs[i+1] <- xs[i] + h*(dx.dt(t,xs[i],ys[i])+dx.dt(t,auxx,auxy))/2
+ys[i+1] <- ys[i] + h*(dy.dt(t,xs[i],ys[i])+dy.dt(t+h,auxx,auxy))/2
+xs[i+1] <- xs[i] + h*(dx.dt(t,xs[i],ys[i])+dx.dt(t+h,auxx,auxy))/2
 }
 
 df <- data.frame(index=n,Tn=ts, Xn=xs, Yn=ys)
