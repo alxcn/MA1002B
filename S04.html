@@ -385,7 +385,76 @@ orden 4 y 5, respectivamente, es decir, <span class="math display">\[w_{i+1}=w_i
 Denotaremos por <span class="math inline">\(\tau_i(h)\)</span> el error
 en el primer método y <span class="math inline">\(\tilde{\tau}_i(h)\)</span> en el segundo método.
 Esto es lo mismo que <span class="math display">\[\tau_i(h)=\frac{y(t_i)-w_i}{h}\]</span> <span class="math display">\[\tilde{\tau}_i(h)=\frac{y(t_i)-\tilde{w}_i}{h}.\]</span>
-Pero (con un poco de algebra) esto es equivalente a <span class="math display">\[\tau_i(h)=\tilde{\tau}_i(h)+\frac{\tilde{w}_i-w_i}{h}\]</span></p>
+Pero (con un poco de algebra) esto es equivalente a <span class="math display">\[\tau_i(h)=\tilde{\tau}_i(h)+\frac{\tilde{w}_i-w_i}{h}.\]</span></p>
+<p>Por lo que el error local de truncamiento es (aproximadamente) <span class="math display">\[\tau_{i+1}=
+\frac{\tilde{w}_{i+1}-w_{i+1}}{h}.\]</span></p>
+<p>Más aún no queremos restringirnos a estimar el error, si no adaptar
+también el tamaño de paso para que este error tenga la tolerancia
+global.</p>
+<p>Si supongo que mi error se comporta como <span class="math inline">\(\tau_{i+1}(h)\approx Kh^n,\)</span> entonces <span class="math inline">\(\tau_{i+1}(qh)\approx
+\frac{q^n}{h}\tau_{i+1}(h),\)</span> por lo que mi tolerancia debe
+escogerse basada en: <span class="math display">\[\frac{q^n}{h}|\tilde{w}_{i+1}-w_{i+1}|\leq
+\varepsilon\]</span> por lo que el factor de aumento de paso debe
+cumplir <span class="math display">\[q\leq \left(\frac{\varepsilon
+h}{|\tilde{w}_{i+1}-w_{i+1}}\right)^{1/n}.\]</span></p>
+</div>
+</div>
+<div id="el-método-de-runge-kutta-fehlberg." class="section level1">
+<h1>El método de Runge-Kutta-Fehlberg.</h1>
+<p>El método utiliza Runge-Kutta con error de truncamiento de orden 5,
+por lo las dos aproximaciones que utilizaremos estarán dadas por:</p>
+<p><span class="math display">\[
+\tilde{w}_{i+1}=w_i+\frac{16}{135}k_1+\frac{6656}{12825}k_3+\frac{28561}{56430}k_4-\frac{9}{50}k_5+\frac{2}{55}k_6\]</span></p>
+<p><span class="math display">\[w_{i+1}=w_i+\frac{2}{216}k_1+\frac{1408}{2565}k_3+\frac{2197}{4104}k_4-\frac{1}{5}k_5.\]</span></p>
+<p>donde los paramétros están dados por:</p>
+<p><span class="math display">\[\begin{array}{ccl}
+k_1 &amp; = &amp; hf(t_i,w_i) \\
+k_2 &amp; = &amp; hf\left(t_i+\frac{h}{4},w_i+\frac{1}{4}k_1\right) \\
+k_3 &amp; = &amp;
+hf\left(t_i+\frac{3h}{8},w_i+\frac{3}{32}k_1+\frac{9}{32}k_2\right) \\
+k_4 &amp; = &amp;
+hf\left(t_i+\frac{12h}{13},w_i+\frac{1932}{2197}k_1-\frac{7200}{2197}k_2+\frac{7296}{2197}k_3\right)
+\\
+k_5 &amp; = &amp;
+hf\left(t_i+h,w_i+\frac{439}{216}k_1-8k_2+\frac{3680}{513}k_3-\frac{845}{4104}k_4\right)
+\\
+k_6 &amp; = &amp;
+hf\left(t_i+\frac{h}{2},w_i-\frac{8}{27}k_1+2k_2-\frac{3544}{2565}k_3+\frac{1859}{4104}k_4-\frac{11}{40}k_5\right)
+\end{array}\]</span></p>
+<div id="cómo-determinar-el-tamaño-del-paso-y-qué-debe-satisfacer-computacionalmente" class="section level2">
+<h2>¿Cómo determinar el tamaño del paso y qué debe satisfacer
+computacionalmente?</h2>
+<p>Inicialmente comenzaremos con un tamaño de paso <span class="math inline">\(h\)</span> para calcular <span class="math inline">\(w_{i+1}\)</span> y <span class="math inline">\(\tilde{w}_{i+1},\)</span> lo cual nos determinará
+el <span class="math inline">\(q\)</span> en ese paso. El incremento
+<span class="math inline">\(q\)</span> debe satisfacer: * Cuando <span class="math inline">\(q&lt;1:\)</span> rechazar el valor inicial de
+<span class="math inline">\(h\)</span> en el paso <span class="math inline">\(i\)</span> y repetir los calculos. * Cuando <span class="math inline">\(q\leq 1:\)</span> aceptar el valor calculado en el
+paso <span class="math inline">\(i\)</span> usando <span class="math inline">\(h,\)</span> y cambiar el tamaño de paso a <span class="math inline">\(qh\)</span> para el paso <span class="math inline">\(i+1.\)</span></p>
+</div>
+<div id="el-pseudo-codigo" class="section level2">
+<h2>El pseudo-codigo</h2>
+<p>Objetivo: aproximar la solución al problema de valores iniciales
+<span class="math display">\[y&#39;=f(t,y),\quad a\leq t\leq b,\quad
+y(a)=\alpha.\]</span></p>
+<p><strong>Entrada:</strong> * <span class="math inline">\(a,b\)</span>
+puntos finales, * <span class="math inline">\(\alpha\)</span> condición
+inicial, * <span class="math inline">\(Tol\)</span> la tolerancia en
+nuestro método, * <span class="math inline">\(hmax\)</span> tamaño de
+paso máximo, * <span class="math inline">\(hmin\)</span> tamaño de paso
+mínimo.</p>
+<p><strong>Salida:</strong> * <span class="math inline">\(t\)</span>
+tiempo muestro, * <span class="math inline">\(w\)</span> aproximación
+solución, * <span class="math inline">\(h\)</span> tamaño de paso
+usado.</p>
+<p><br /><br /> <em>Paso 1:</em> Tomemos <span class="math inline">\(t=a,\)</span> <span class="math inline">\(w=\alpha,\)</span> <span class="math inline">\(h=hmax\)</span> y <span class="math inline">\(Flag=1.\)</span></p>
+<p><br /><br /> <em>Paso 2:</em> While(Flag==1) haga pasos 3-11:
+<br /><br /> <em>Paso 3:</em> Calcule los parametros <span class="math inline">\(k_1,\ldots,k_6.\)</span> <br /> <em>Paso 4:</em>
+Tome <span class="math display">\[error=\frac{1}{h}\left|\frac{1}{360}k_1-\frac{128}{4275}k_3-\frac{2197}{75240}k_4+\frac{1}{50}k_5+\frac{2}{55}k_6\right|\]</span>
+<em>Paso 5:</em> If(<span class="math inline">\(error\leq Tol\)</span>)
+haga paso 6 y 7: <br /> <em>Paso 6:</em> Tome <span class="math inline">\(t=t+h.\)</span> <br /> Tome <span class="math display">\[w=w+\frac{2}{216}k_1+\frac{1408}{2565}k_3+\frac{2197}{4104}k_4-\frac{1}{5}k_5\]</span>
+<em>Paso 7:</em> guarde <span class="math inline">\((t,w,h)\)</span>
+<br /> <em>Paso 8:</em> Tomemos <span class="math inline">\(q=0.84(Tol/error)^{1/4}.\)</span> <br /> <em>Paso
+9:</em> Si <span class="math inline">\(q\leq 0.1\)</span> tome <span class="math inline">\(h=0.1h,\)</span> si <span class="math inline">\(q\geq 4\)</span> entonces <span class="math inline">\(h=4h,\)</span> de lo contrario <span class="math inline">\(h=qh.\)</span> <br /> <em>Paso 10:</em> si <span class="math inline">\(h&gt;hmax,\)</span> entonces <span class="math inline">\(h=hmax.\)</span> <br /> <em>Paso 11:</em> Si <span class="math inline">\(t\leq b,\)</span> entonces <span class="math inline">\(Flag=0,\)</span> de lo contrario si <span class="math inline">\(t+h&gt;b,\)</span> entonces <span class="math inline">\(h=b-t,\)</span> si <span class="math inline">\(h&lt;hmin\)</span> <span class="math inline">\(Flag=0\)</span> y Output(“h minimo excedido”).
+<em>Paso 12:</em> Terminar proceso.</p>
 </div>
 </div>
 

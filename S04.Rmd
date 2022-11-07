@@ -11,12 +11,81 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Recordando
 
-En los métodos anteriores que estudiamos, utilizamos una aproximación a una EDO a un paso y dada por $$w_{i+1}=w_i+h_i\phi(t_i,w_i,h_i)$$ sin embargo en estos métodos descuidamos el error el cual puede crecer a medida que nos alejamos de las condiciones iniciales. 
+En los métodos anteriores que estudiamos, utilizamos una aproximación a una EDO a un paso y dada por $$w_{i+1}=w_i+h_i\phi(t_i,w_i,h_i)$$ sin embargo en estos métodos descuidamos el error el cual puede crecer a medida que nos alejamos de las condiciones iniciales.
 
-Un método __ideal__ para aproximar estas soluciones tendría que considerar lo anterior $$w_{i+1}=w_i+h_i\phi(t_i,w_i,h_i)$$ y además convinar una tolerancia $$|y(t_i)-w_i|\leq \varepsilon$$ (una cota global del error) no importando si eso reduce el número de muestras que aproximemos, siempre y cuando tengamos la toleracia.
+Un método **ideal** para aproximar estas soluciones tendría que considerar lo anterior $$w_{i+1}=w_i+h_i\phi(t_i,w_i,h_i)$$ y además convinar una tolerancia $$|y(t_i)-w_i|\leq \varepsilon$$ (una cota global del error) no importando si eso reduce el número de muestras que aproximemos, siempre y cuando tengamos la toleracia.
 
 # Desarrollemos el algoritmo
 
 ## Algunas suposiciones
 
-Supongamos que tenemos aproximaciones $w_i$ y $\tilde{w}_i$ que corresponden a métodos de orden 4 y 5, respectivamente, es decir, $$w_{i+1}=w_i+h\phi(t_i,w_i,h)+O(h^4)$$ $$\tilde{w}_{i+1}=\tilde{w}_i+h\psi(t_i,\tilde{w}_i,h)+O(h^5).$$ Denotaremos por $\tau_i(h)$ el error en el primer método y $\tilde{\tau}_i(h)$ en el segundo método. Esto es lo mismo que $$\tau_i(h)=\frac{y(t_i)-w_i}{h}$$ $$\tilde{\tau}_i(h)=\frac{y(t_i)-\tilde{w}_i}{h}.$$ Pero (con un poco de algebra) esto es equivalente a $$\tau_i(h)=\tilde{\tau}_i(h)+\frac{\tilde{w}_i-w_i}{h}$$
+Supongamos que tenemos aproximaciones $w_i$ y $\tilde{w}_i$ que corresponden a métodos de orden 4 y 5, respectivamente, es decir, $$w_{i+1}=w_i+h\phi(t_i,w_i,h)+O(h^4)$$ $$\tilde{w}_{i+1}=\tilde{w}_i+h\psi(t_i,\tilde{w}_i,h)+O(h^5).$$ Denotaremos por $\tau_i(h)$ el error en el primer método y $\tilde{\tau}_i(h)$ en el segundo método. Esto es lo mismo que $$\tau_i(h)=\frac{y(t_i)-w_i}{h}$$ $$\tilde{\tau}_i(h)=\frac{y(t_i)-\tilde{w}_i}{h}.$$ Pero (con un poco de algebra) esto es equivalente a $$\tau_i(h)=\tilde{\tau}_i(h)+\frac{\tilde{w}_i-w_i}{h}.$$
+
+Por lo que el error local de truncamiento es (aproximadamente) $$\tau_{i+1}= \frac{\tilde{w}_{i+1}-w_{i+1}}{h}.$$
+
+Más aún no queremos restringirnos a estimar el error, si no adaptar también el tamaño de paso para que este error tenga la tolerancia global.
+
+Si supongo que mi error se comporta como $\tau_{i+1}(h)\approx Kh^n,$ entonces $\tau_{i+1}(qh)\approx \frac{q^n}{h}\tau_{i+1}(h),$ por lo que mi tolerancia debe escogerse basada en: $$\frac{q^n}{h}|\tilde{w}_{i+1}-w_{i+1}|\leq \varepsilon$$ por lo que el factor de aumento de paso debe cumplir $$q\leq \left(\frac{\varepsilon h}{|\tilde{w}_{i+1}-w_{i+1}}\right)^{1/n}.$$
+
+# El método de Runge-Kutta-Fehlberg.
+
+El método utiliza Runge-Kutta con error de truncamiento de orden 5, por lo las dos aproximaciones que utilizaremos estarán dadas por:
+
+$$ \tilde{w}_{i+1}=w_i+\frac{16}{135}k_1+\frac{6656}{12825}k_3+\frac{28561}{56430}k_4-\frac{9}{50}k_5+\frac{2}{55}k_6$$
+
+$$w_{i+1}=w_i+\frac{2}{216}k_1+\frac{1408}{2565}k_3+\frac{2197}{4104}k_4-\frac{1}{5}k_5.$$
+
+donde los paramétros están dados por:
+
+\[\begin{array}{ccl}
+k_1 & = & hf(t_i,w_i) \\
+k_2 & = & hf\left(t_i+\frac{h}{4},w_i+\frac{1}{4}k_1\right) \\
+k_3 & = & hf\left(t_i+\frac{3h}{8},w_i+\frac{3}{32}k_1+\frac{9}{32}k_2\right) \\
+k_4 & = & hf\left(t_i+\frac{12h}{13},w_i+\frac{1932}{2197}k_1-\frac{7200}{2197}k_2+\frac{7296}{2197}k_3\right) \\
+k_5 & = & hf\left(t_i+h,w_i+\frac{439}{216}k_1-8k_2+\frac{3680}{513}k_3-\frac{845}{4104}k_4\right) \\
+k_6 & = & hf\left(t_i+\frac{h}{2},w_i-\frac{8}{27}k_1+2k_2-\frac{3544}{2565}k_3+\frac{1859}{4104}k_4-\frac{11}{40}k_5\right)
+\end{array}\]
+
+## ¿Cómo determinar el tamaño del paso y qué debe satisfacer computacionalmente?
+
+Inicialmente comenzaremos con un tamaño de paso $h$ para calcular $w_{i+1}$ y $\tilde{w}_{i+1},$ lo cual nos determinará el $q$ en ese paso. El incremento $q$ debe satisfacer:
+  * Cuando $q<1:$ rechazar el valor inicial de $h$ en el paso $i$ y repetir los calculos.
+  * Cuando $q\leq 1:$ aceptar el valor calculado en el paso $i$ usando $h,$ y cambiar el tamaño de paso a $qh$ para el paso $i+1.$
+  
+## El pseudo-codigo
+
+Objetivo: aproximar la solución al problema de valores iniciales $$y'=f(t,y),\quad a\leq t\leq b,\quad y(a)=\alpha.$$
+
+__Entrada:__ 
+  * $a,b$ puntos finales,
+  * $\alpha$ condición inicial,
+  * $Tol$ la tolerancia en nuestro método,
+  * $hmax$ tamaño de paso máximo,
+  * $hmin$ tamaño de paso mínimo.
+  
+__Salida:__
+  * $t$ tiempo muestro,
+  * $w$ aproximación solución,
+  * $h$ tamaño de paso usado.
+  
+<br/><br/>
+_Paso 1:_ Tomemos $t=a,$ $w=\alpha,$  $h=hmax$ y $Flag=1.$
+
+<br/><br/>
+_Paso 2:_ While(Flag==1) haga pasos 3-11:
+<br/><br/>
+  _Paso 3:_ Calcule los parametros $k_1,\ldots,k_6.$ <br/>
+  _Paso 4:_ Tome $$error=\frac{1}{h}\left|\frac{1}{360}k_1-\frac{128}{4275}k_3-\frac{2197}{75240}k_4+\frac{1}{50}k_5+\frac{2}{55}k_6\right|$$ 
+  _Paso 5:_ If($error\leq Tol$) haga paso 6 y 7: <br/>
+    _Paso 6:_ Tome $t=t+h.$ <br/>
+    Tome $$w=w+\frac{2}{216}k_1+\frac{1408}{2565}k_3+\frac{2197}{4104}k_4-\frac{1}{5}k_5$$
+    _Paso 7:_ guarde $(t,w,h)$
+  <br/>
+  _Paso 8:_ Tomemos $q=0.84(Tol/error)^{1/4}.$
+  <br/>
+  _Paso 9:_ Si $q\leq 0.1$ tome $h=0.1h,$ si $q\geq 4$ entonces $h=4h,$ de lo contrario $h=qh.$ <br/>
+  _Paso 10:_ si $h>hmax,$ entonces $h=hmax.$ <br/>
+  _Paso 11:_ Si $t\leq b,$ entonces $Flag=0,$ de lo contrario si $t+h>b,$ entonces $h=b-t,$ si $h<hmin$ $Flag=0$ y Output("h minimo excedido").
+_Paso 12:_ Terminar proceso.
+
+
