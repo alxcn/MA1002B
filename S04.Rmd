@@ -88,4 +88,60 @@ _Paso 2:_ While(Flag==1) haga pasos 3-11:
   _Paso 11:_ Si $t\leq b,$ entonces $Flag=0,$ de lo contrario si $t+h>b,$ entonces $h=b-t,$ si $h<hmin$ $Flag=0$ y Output("h minimo excedido").
 _Paso 12:_ Terminar proceso.
 
+```{r}
+RKF <- function(dy.dx,hmax=0.1,hmin=0.0001,start=0.0,end=2.0,Tol=0.0000001,y0=0.5){
+  t<- start
+  w <- y0
+  h <- hmax
+  Flag <- 1
+  sols <- numeric(length=(end-start)/hmin)
+  sols[1]<-w
+  times <- numeric(length=(end-start)/hmin)
+  times[1] <- t
+  i<-1
+  while (Flag==1) {
+    k1<-h*dy.dx(t,w)
+    k2<-h*dy.dx(t+h/4,w+k1/4)
+    k3<- h*dy.dx(t+3*h/8, w+3*k1/32+9*k2/32)
+    k4<- h*dy.dx(t+12*h/13,w+1932*k1/2197-7200*k2/2197+7296*k3/2197)
+    k5<-h*dy.dx(t+h, w+439*k1/216-8*k2+3680*k3/513-845*k4/4140)
+    k6<- h*dy.dx(t+h/2,w-8*k1/27+2*k2-3544*k3/2565+1859*k4/4104-11*k5/40)
+    Error <- abs(k1/360-128*k3/4275-2197*k4/75240+k5/50+2*k6/55)/h
+    if(Error<=Tol){
+      t=t+h
+      times[1+i]<-t
+      w=w+25*k1/216+1408*k3/2565+2197*k4/4104-k5/5
+      sols[1+i]<- w
+      i<-i+1
+    }
+    d<- 0.84*((Tol/Error)^0.25)
+    if(d<=0.1){
+      h <- 0.1*h}
+      else{
+        if(d>=4){
+          h <- 4*h }
+          else{
+            h <- d*h
+          }
+        }
+    if(h>hmax){
+      h<-hmax
+    }
+    if(t>=end){
+      Flag <- 0}
+      else{
+        if(t+h>end) {
+          h <- end-t
+        } else{
+          if(h<hmin){
+            Flag <- 0
+            return('tamaño de paso menor al minimo. Proceso terminado insatisfactoriamente')
+          }
+        }
+      }
+    
+  }
+  return(t,sols)
+}
+```
 
