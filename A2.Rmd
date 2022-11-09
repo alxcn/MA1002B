@@ -1,0 +1,23 @@
+---
+title: "Actividad2"
+author: "Alejandro Ucan Puc"
+date: "2022-11-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Instrucciones:
+
+Utilizando el Método de Runge-Kutta-Fehlberg  con Tolerancia $10^{-4}$ calcule:
+
+1. Las aproximaciones a la solución del PVI
+  * $y'=y/t-(y/t)^2$ con $1\leq t\leq 4,$ $y(1)=1$ y solución real: $y(t)=\frac{t}{1+\ln(t)}.$
+  * $y'=1+y/t+(y/t)^2$ con $1\leq t \leq 3,$ $y(1)=0$ y solución real: $y(t)=t\tan(\ln(t))$
+2. Grafique la solución real cómo la aproximación.
+3. Grafique como evoluciona el error.
+4. En una gráfica Compare el error de este método con el método de Runge-Kutta de orden 4.
+
+Entrega en Canvas un pdf con tus gráficas.
