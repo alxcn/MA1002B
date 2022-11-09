@@ -89,13 +89,16 @@ _Paso 2:_ While(Flag==1) haga pasos 3-11:
 _Paso 12:_ Terminar proceso.
 
 ```{r}
-RKF <- function(dy.dx,hmax=0.1,hmin=0.0001,start=0.0,end=2.0,Tol=0.0000001,y0=0.5){
+RKF <- function(dy.dx,y,hmax=0.1,hmin=0.0001,start=0.0,end=2.0,Tol=0.0000001,y0=0.5){
   t<- start
   w <- y0
   h <- hmax
   Flag <- 1
   sols <- numeric(length=(end-start)/hmin)
+  real <- numeric(length=(end-start)/hmin)
+  error <- numeric(length=(end-start)/hmin)
   sols[1]<-w
+  error[1]<-w
   times <- numeric(length=(end-start)/hmin)
   times[1] <- t
   i<-1
@@ -112,6 +115,8 @@ RKF <- function(dy.dx,hmax=0.1,hmin=0.0001,start=0.0,end=2.0,Tol=0.0000001,y0=0.
       times[1+i]<-t
       w=w+25*k1/216+1408*k3/2565+2197*k4/4104-k5/5
       sols[1+i]<- w
+      real[1+i]<- y(times[1+i])
+      error[i+1]<- abs(w-real[1+i])
       i<-i+1
     }
     d<- 0.84*((Tol/Error)^0.25)
@@ -141,7 +146,22 @@ RKF <- function(dy.dx,hmax=0.1,hmin=0.0001,start=0.0,end=2.0,Tol=0.0000001,y0=0.
       }
     
   }
-  return(t,sols)
+  df <- data.frame(Tn=times, Yn=sols,Yo=real, ErrorRKF=error)
+  return(df)
 }
 ```
+
+
+1. Vamos a trabajar con
+
+$y'=y/t-(y/t)^2$ con $1\leq t\leq 4,$ $y(1)=1$ y solución real: $y(t)=\frac{t}{1+\ln(t)}.$
+```{r}
+library(tidyverse)
+library(latex2exp)
+library(gridExtra)
+dy.dt<-function(t,y){y/t-(y/t)^2}
+y<-function(t){t/(1+log(t))}
+RKF(dy.dt,y,hmax=1,hmin=.0001,start=1.0,end=4.0,Tol=0.0001,y0=1.0)
+```
+
 
