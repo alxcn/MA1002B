@@ -161,7 +161,13 @@ library(latex2exp)
 library(gridExtra)
 dy.dt<-function(t,y){y/t-(y/t)^2}
 y<-function(t){t/(1+log(t))}
-RKF(dy.dt,y,hmax=1,hmin=.0001,start=1.0,end=4.0,Tol=0.0001,y0=1.0)
+Ecuacion1<-RKF(dy.dt,y,hmax=1,hmin=.0001,start=1.0,end=4.0,Tol=10E-4,y0=1.0)
+plot(Ecuacion1$Tn,Ecuacion1$Yn)
 ```
 
+```{r}
+dy.dt<-function(t,y){1+y/t+(y/t)^2}
+y<-function(t){t*tan(log(t))}
+RKF(dy.dt,y,hmax=0.01,hmin=0.000001,start=1.0,end=3.0,Tol=0.0001,y0=0.0)
+```
 
