@@ -1,0 +1,23 @@
+---
+title: 'S06: Aproximaciones a EDP'
+author: "Alejandro Ucan Puc"
+date: "2022-11-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## ¿Qué es una EDP?
+
+Una EDP (ecuación diferencial parcial) es una ecuación diferencial que incluye derivadas parciales entre sus terminos. Se sobre-entiende que la familia de soluciones ahora son una familia de funciones multivaluadas.
+
+
+Usualmente se piensa que estas funciones solución estarán definidas en un dominio (conjunto conexo y compacto de $\mathbb{R}^n$). 
+
+Un __problema de valores en la frontera__, es un par formado por una ecuación diferencial parcial definida en un dominio y una condición en la función cuando se restringe a la frontera del dominio, usualmente del tipo $$u(x,y)|_{\partial D}=g(x,y).$$
+
+### Ejemplo:
+
+  Un cuerpo __isotrópico__ si la conductividad térmica en cada de sus puntos es independiente de la dirección del flujo del calor a través del punto. En este tipo de cuerpos, la temperatura $u(x,y,z,t)$ se obtiene resolviendo la ecuación diferencial: $$\frac{\partial^2 u}{\partial x^2}+\frac{\partial^2 u}{\partial y^2}+\frac{\partial^2u }{\partial z^2}=\frac{c\varrho}{k}\frac{\partial u}{\partial t}.$$
