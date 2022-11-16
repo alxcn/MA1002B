@@ -63,3 +63,33 @@ w_{i0}= g(x_i,y_0) & \mbox{y} & w_{im}=g(x_i,y_m)
 # Ejemplo:
 
 Queremos determinar la distribución de calor en una placa cuadrada metálica delgada con dimensiones de 0.5m por 0.5m. Sabemos que dos frontera son conservadas a $0^\circ C$ mientras que en los otros dos aumenta linealmente de $0^\circ C$ to $100^\circ C.$
+
+---
+```{r}
+library(scatterplot3d)
+A <- rbind(c(4, -1, 0,-1,0,0,0,0,0), 
+           c(-1, 4, -1,0,-1,0,0,0,0), 
+           c(0, -1, 4,0,0,-1,0,0,0),
+           c(-1, 0, 0,4,-1,0,-1,0,0),
+           c(0, -1, 0,-1,4,-1,0,-1,0),
+           c(0, 0, -1,0,-1,4,0,0,-1),
+           c(0, 0, 0,-1,0,0,4,-1,0),
+           c(0, 0, 0,0,-1,0,-1,4,-1),
+           c(0, 0, 0,0,0,-1,0,-1,4))
+B <- c(25, 50, 150,0,0,50,0,0,25)
+
+w<-solve(A,B)
+xs <- numeric(length=9)
+ys <- numeric( length=9)
+
+for (i in 1:3){
+  for (j in 1:3){
+    auxx <- 0.5+i*0.5
+    auxy <- 0.5+j*0.5
+    xs[i+(3-j)*(3)]<-auxx
+    ys[i+(3-j)*(3)]<-auxy
+  }
+}
+scatterplot3d(x=xs, y=ys, z=w,type='h',color='red')
+```
+
