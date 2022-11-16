@@ -2,7 +2,9 @@
 title: 'S06: Aproximaciones a EDP'
 author: "Alejandro Ucan Puc"
 date: "2022-11-14"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -13,11 +15,51 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Una EDP (ecuación diferencial parcial) es una ecuación diferencial que incluye derivadas parciales entre sus terminos. Se sobre-entiende que la familia de soluciones ahora son una familia de funciones multivaluadas.
 
+Usualmente se piensa que estas funciones solución estarán definidas en un dominio (conjunto conexo y compacto de $\mathbb{R}^n$).
 
-Usualmente se piensa que estas funciones solución estarán definidas en un dominio (conjunto conexo y compacto de $\mathbb{R}^n$). 
-
-Un __problema de valores en la frontera__, es un par formado por una ecuación diferencial parcial definida en un dominio y una condición en la función cuando se restringe a la frontera del dominio, usualmente del tipo $$u(x,y)|_{\partial D}=g(x,y).$$
+Un **problema de valores en la frontera**, es un par formado por una ecuación diferencial parcial definida en un dominio y una condición en la función cuando se restringe a la frontera del dominio, usualmente del tipo $$u(x,y)|_{\partial D}=g(x,y).$$
 
 ### Ejemplo:
 
-  Un cuerpo __isotrópico__ si la conductividad térmica en cada de sus puntos es independiente de la dirección del flujo del calor a través del punto. En este tipo de cuerpos, la temperatura $u(x,y,z,t)$ se obtiene resolviendo la ecuación diferencial: $$\frac{\partial^2 u}{\partial x^2}+\frac{\partial^2 u}{\partial y^2}+\frac{\partial^2u }{\partial z^2}=\frac{c\varrho}{k}\frac{\partial u}{\partial t}.$$
+Un cuerpo **isotrópico** si la conductividad térmica en cada de sus puntos es independiente de la dirección del flujo del calor a través del punto. En este tipo de cuerpos, la temperatura $u(x,y,z,t)$ se obtiene resolviendo la ecuación diferencial: $$\frac{\partial^2 u}{\partial x^2}+\frac{\partial^2 u}{\partial y^2}+\frac{\partial^2u }{\partial z^2}=\frac{c\varrho}{k}\frac{\partial u}{\partial t}.$$
+
+## Objetivo:
+
+Desarrollar un método para resolver problemas de condiciones en la frontera.
+
+---
+## EDP: Elípticas
+
+Consideremos la siguiente EDP $$\nabla^2 u=\frac{\partial^2 u}{\partial x^2}+\frac{\partial^2 u}{\partial y^2}=f(x,y),$$
+
+en la región $R=\{(x,y): a<x<b, c<y<d\}$ y condiciones en la frontera $u(x,y)=g(x,y)$ para $(x,y)\in S.$
+
+### Diferencias Finitas:
+
+Construyamos una red en la región $R,$ para esto tomamos $n\times m$ puntos con tamaño de pasos $$h=\frac{b-a}{n}\quad\mbox{y}\quad k=\frac{d-c}{m}$$ y estos puntos de la red serían $$x_i=a+ih \quad\mbox{y}\quad y_j=a+jk.$$
+
+https://yaredwb.github.io/FDM2D/assets/images/2D_grid.png
+
+
+Utilizaremos la serie de Taylor para aproximar la parcial de orden 2 en $x$ alrededor de $x_i:$ $$\frac{\partial^2 u}{\partial x^2}(x_i,y_j)=\frac{u(x_{i+1},y_j)-2u(x_i,y_j)+u(x_{i-1},y_j)}{h^2}-\frac{h^2}{12}\frac{\partial^4 u}{\partial x^4}(\zeta_{i},y_j)$$
+
+y podemos utilizamos lo mismo para la parcial de orden 2 en $y$ alrededor de $y_j:$ $$\frac{\partial^2 u}{\partial x^2}(x_i,y_j)=\frac{u(x_i,y_{j+1})-2u(x_i,y_j)+u(x_i,y_{j-1})}{k^2}-\frac{k^2}{12}\frac{\partial^4 u}{\partial x^4}(x_i,\eta_j)$$
+
+Utilizaremos estas expresiones en nuestra EDP:
+
+$$\frac{u(x_{i+1},y_j)-2u(x_i,y_j)+u(x_{i-1},y_j)}{h^2}+\frac{u(x_i,y_{j+1})-2u(x_i,y_j)+u(x_i,y_{j-1})}{k^2}=f(x_i,y_j)+\frac{h^2}{12}\frac{\partial^4 u}{\partial x^4}(\zeta_{i},y_j)+\frac{k^2}{12}\frac{\partial^4 u}{\partial x^4}(x_i,\eta_j)$$ y esto se satisface para toda $i=1,2,\cdots, n-1$ y $j=1,2,\cdots, m-1.$ Además conocemos las condiciones de frontera: $$\begin{array}{ccc} 
+u(x_0,y_j)= g(x_0,y_j) & \mbox{y} & u(x_n,y_j)=g(x_n,y_j)\\
+u(x_i,y_0)= g(x_i,y_0) & \mbox{y} & u(x_i,y_m)=g(x_i,y_m)
+\end{array}$$
+
+#### El método:
+
+Si $w_{ij}$ representa la aproximación de la solución de la EDP en el punto $(x_i,y_j),$ entonces _diferencias finitas_ es un método de orden $O(h^2+k^2)$ dada por $$2\left[\left(\frac{h}{k}\right)^2+1\right]w_{ij}-(w_{i+1,j}+w_{i-1,j})-\left(\frac{h}{k}\right)^2 (w_{i,j+1}+w_{i,j-1})=-h^2f(x_i,y_j)$$ y además conocemos $$\begin{array}{ccc} 
+w_{0j}= g(x_0,y_j) & \mbox{y} & w_{nj}=g(x_n,y_j)\\
+w_{i0}= g(x_i,y_0) & \mbox{y} & w_{im}=g(x_i,y_m)
+\end{array}$$
+---
+
+# Ejemplo:
+
+Queremos determinar la distribución de calor en una placa cuadrada metálica delgada con dimensiones de 0.5m por 0.5m. Sabemos que dos frontera son conservadas a $0^\circ C$ mientras que en los otros dos aumenta linealmente de $0^\circ C$ to $100^\circ C.$

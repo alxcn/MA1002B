@@ -380,6 +380,54 @@ u}{\partial x^2}+\frac{\partial^2 u}{\partial y^2}+\frac{\partial^2u
 t}.\]</span></p>
 </div>
 </div>
+<div id="objetivo" class="section level2">
+<h2>Objetivo:</h2>
+<p>Desarrollar un método para resolver problemas de condiciones en la
+frontera.</p>
+<hr />
+</div>
+<div id="edp-elípticas" class="section level2">
+<h2>EDP: Elípticas</h2>
+<p>Consideremos la siguiente EDP <span class="math display">\[\nabla^2
+u=\frac{\partial^2 u}{\partial x^2}+\frac{\partial^2 u}{\partial
+y^2}=f(x,y),\]</span></p>
+<p>en la región <span class="math inline">\(R=\{(x,y): a&lt;x&lt;b,
+c&lt;y&lt;d\}\)</span> y condiciones en la frontera <span class="math inline">\(u(x,y)=g(x,y)\)</span> para <span class="math inline">\((x,y)\in S.\)</span></p>
+<div id="diferencias-finitas" class="section level3">
+<h3>Diferencias Finitas:</h3>
+<p>Construyamos una red en la región <span class="math inline">\(R,\)</span> para esto tomamos <span class="math inline">\(n\times m\)</span> puntos con tamaño de pasos
+<span class="math display">\[h=\frac{b-a}{n}\quad\mbox{y}\quad
+k=\frac{d-c}{m}\]</span> y estos puntos de la red serían <span class="math display">\[x_i=a+ih \quad\mbox{y}\quad
+y_j=a+jk.\]</span></p>
+<p><a href="https://yaredwb.github.io/FDM2D/assets/images/2D_grid.png" class="uri">https://yaredwb.github.io/FDM2D/assets/images/2D_grid.png</a></p>
+<p>Utilizaremos la serie de Taylor para aproximar la parcial de orden 2
+en <span class="math inline">\(x\)</span> alrededor de <span class="math inline">\(x_i:\)</span> <span class="math display">\[\frac{\partial^2 u}{\partial
+x^2}(x_i,y_j)=\frac{u(x_{i+1},y_j)-2u(x_i,y_j)+u(x_{i-1},y_j)}{h^2}-\frac{h^2}{12}\frac{\partial^4
+u}{\partial x^4}(\zeta_{i},y_j)\]</span></p>
+<p>y podemos utilizamos lo mismo para la parcial de orden 2 en <span class="math inline">\(y\)</span> alrededor de <span class="math inline">\(y_j:\)</span> <span class="math display">\[\frac{\partial^2 u}{\partial
+x^2}(x_i,y_j)=\frac{u(x_i,y_{j+1})-2u(x_i,y_j)+u(x_i,y_{j-1})}{k^2}-\frac{k^2}{12}\frac{\partial^4
+u}{\partial x^4}(x_i,\eta_j)\]</span></p>
+<p>Utilizaremos estas expresiones en nuestra EDP:</p>
+<p><span class="math display">\[\frac{u(x_{i+1},y_j)-2u(x_i,y_j)+u(x_{i-1},y_j)}{h^2}+\frac{u(x_i,y_{j+1})-2u(x_i,y_j)+u(x_i,y_{j-1})}{k^2}=f(x_i,y_j)+\frac{h^2}{12}\frac{\partial^4
+u}{\partial x^4}(\zeta_{i},y_j)+\frac{k^2}{12}\frac{\partial^4
+u}{\partial x^4}(x_i,\eta_j)\]</span> y esto se satisface para toda
+<span class="math inline">\(i=1,2,\cdots, n-1\)</span> y <span class="math inline">\(j=1,2,\cdots, m-1.\)</span> Además conocemos las
+condiciones de frontera: <span class="math display">\[\begin{array}{ccc}
+u(x_0,y_j)= g(x_0,y_j) &amp; \mbox{y} &amp; u(x_n,y_j)=g(x_n,y_j)\\
+u(x_i,y_0)= g(x_i,y_0) &amp; \mbox{y} &amp; u(x_i,y_m)=g(x_i,y_m)
+\end{array}\]</span></p>
+<div id="el-método" class="section level4">
+<h4>El método:</h4>
+<p>Si <span class="math inline">\(w_{ij}\)</span> representa la
+aproximación de la solución de la EDP en el punto <span class="math inline">\((x_i,y_j),\)</span> entonces <em>diferencias
+finitas</em> es un método de orden <span class="math inline">\(O(h^2+k^2)\)</span> dada por <span class="math display">\[2\left[\left(\frac{h}{k}\right)^2+1\right]w_{ij}-(w_{i+1,j}+w_{i-1,j})-\left(\frac{h}{k}\right)^2
+(w_{i,j+1}+w_{i,j-1})=-h^2f(x_i,y_j)\]</span> y además conocemos <span class="math display">\[\begin{array}{ccc}
+w_{0j}= g(x_0,y_j) &amp; \mbox{y} &amp; w_{nj}=g(x_n,y_j)\\
+w_{i0}= g(x_i,y_0) &amp; \mbox{y} &amp; w_{im}=g(x_i,y_m)
+\end{array}\]</span></p>
+</div>
+</div>
+</div>
 
 
 
