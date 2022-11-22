@@ -126,7 +126,32 @@ FiniteDifferences<-function(xi,xf,yi,yf,m,n,Tol,MaxIt,f,g){
         norm <- abs(w[i+1,m]-z)
         ws[i+1,m]<-z
       }
-      z<- (-h^2 * f(X[n-1],Y[m-1]) +g(X[m],))
+      z<- (-h^2 * f(X[n-1],Y[m-1]) +g(X[m+1],Y[m])+lambda*g(X[n],Y[m+1])+w[n-1,m]+lambda*ws[n,m-1])/mu
+      if(abs(ws[n,m]-z)>norm){
+        norm=abs(ws[n,m]-z)
+        ws[n,m]<- z
+      }
+      for(k in 2:m-1){
+        j=m-k
+        z<- (-h^2* f(X[1],Y[j])+g(X[1],Y[j])+lambda*ws[2,j+2]+lambda*ws[2,j]+w[3,j+1])/mu
+        if(abs(ws[2,j+1]-z)>norm){
+          norm<- abs(ws[2,j]-z)
+          ws[2,j+1]<-z
+          for (i in 2:n-1){
+            z<-(-h^2*f(X[i+1],Y[j+1])+ws[i,j+1]+lambda*ws[i+1,j+2]+ws[i+2,j+1]+lambda*ws[i+1,j])/mu
+            if (abs(ws[i+1,j+1]-z)> norm){
+              norm<- abs(ws[i+1,j+1]-z)
+              ws[i+1,j+1]<-z
+            }
+            z<- (-h^2*f(X[n],Y[j+1])+g(X[n+1],Y[j+1])+ws[n+1,j+1]+lambda*ws[n,j+2]+lambda*ws[n,j])/mu
+            if(abs(ws[n,j+1]-z)>norm){
+              norm<- abs(ws[n,j+1]-z)
+              ws[n,j+1]<-z
+            }
+            z <- (-h^2*f(X[2],Y[2])+g(X[1],Y[2])+)
+          }
+        }
+      }
     }
   }
   }

@@ -1,0 +1,28 @@
+---
+title: "PreEA"
+author: "Alejandro Ucan Puc"
+date: "2022-11-22"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problematica:
+
+En una empresa de manufactura se consideran 3 procesos interconectados cuyas salidas están modeladas por el siguiente sistema de EDO's 
+
+\[\begin{array}{ccc} 
+u_1' & = & u_2-u_3+t \\
+u_2' & = & 3t^2 \\
+u_3' & = & u_2 e^{-t}
+\end{array}\]
+
+De donde se sabe que $0\leq t\leq 1$ (que se mide en días), y además $u_1(0)=1,\, u_2(0)=1 y $u_3(0)=-1.$
+
+Tu jefe teme que haya un error en el proceso dado que los esperados de los procesos no están coincidiendo con los resultados. Te pidió que realices una investigación, para ello te hace llegar un .csv con los promedios de resultados de manufactura en un día recopilado de observaciones anteriores  ( __ManufacturingData.csv__ que se encuentra en el GitHub ). Tu jefe te pide:
+
+1. Determinar si existe un error entre los esperados del proceso y lo observado.
+2. En caso que determines si existe un error, proponer un nuevo conjunto de datos esperado para que el departamento de ingenieria ajuste las maquinas.
+3. Argumenta el por qué tu propuesta de esperados es bueno para futuras observaciones y comparaciones.
